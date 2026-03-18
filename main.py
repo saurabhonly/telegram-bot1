@@ -1,53 +1,46 @@
+from telegram import Update
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters
 import os
 import logging
-from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-# 🔐 Token from Railway Variables
+# 🔐 Bot token from Railway Variables
 TOKEN = os.getenv("BOT_TOKEN")
+if not TOKEN:
+    raise ValueError("❌ BOT_TOKEN missing! Add it in Railway variables.")
 
-# 🧠 Logging setup (errors dekhne ke liye)
+# 🧠 Logging setup
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
 # 👋 Start command
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("👋 Hello!\n\nBot chal raha hai 🚀")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("👋 Hello! Bot chal raha hai ✅")
 
 # ℹ️ Help command
-def help_command(update: Update, context: CallbackContext):
-    update.message.reply_text("/start - Bot start\n/help - Help menu")
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("/start - Start the bot\n/help - Show this help message")
 
-# 🤖 Auto reply (jo bhi message aaye uska reply)
-def auto_reply(update: Update, context: CallbackContext):
+# 🤖 Auto reply (echo messages)
+async def auto_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text
-    update.message.reply_text(f"📩 Tumne likha: {text}")
-
-# ❌ Error handler
-def error(update: Update, context: CallbackContext):
-    logging.error(f"Update {update} caused error {context.error}")
+    await update.message.reply_text(f"📩 Tumne likha: {text}")
 
 # 🚀 Main function
 def main():
-    updater = Updater(TOKEN, use_context=True)
-    dp = updater.dispatcher
+    app = ApplicationBuilder().token(TOKEN).build()
 
     # Commands
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
 
-    # Auto reply handler
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, auto_reply))
+    # Auto reply for normal messages
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, auto_reply))
 
-    # Error handler
-    dp.add_error_handler(error)
+    print("✅ Bot Started Successfully...")
 
-    print("✅ Bot started successfully...")
-    
-    updater.start_polling()
-    updater.idle()
+    app.run_polling()
 
 # ▶️ Run
 if __name__ == "__main__":
