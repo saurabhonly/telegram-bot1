@@ -1,59 +1,54 @@
 import os
 import logging
-from threading import Thread
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
-# Logging
+# 🔐 Token from Railway Variables
+TOKEN = os.getenv("BOT_TOKEN")
+
+# 🧠 Logging setup (errors dekhne ke liye)
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-TOKEN = os.getenv("BOT_TOKEN")
-@app.route('/')
-def home():
-    return "Bot is alive!"
 
-def run():
-    app.run(host='0.0.0.0', port=8080)
+# 👋 Start command
+def start(update: Update, context: CallbackContext):
+    update.message.reply_text("👋 Hello!\n\nBot chal raha hai 🚀")
 
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
+# ℹ️ Help command
+def help_command(update: Update, context: CallbackContext):
+    update.message.reply_text("/start - Bot start\n/help - Help menu")
 
-# Telegram commands
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("✅ Bot is running 24/7 on Railway!")
+# 🤖 Auto reply (jo bhi message aaye uska reply)
+def auto_reply(update: Update, context: CallbackContext):
+    text = update.message.text
+    update.message.reply_text(f"📩 Tumne likha: {text}")
 
-async def ping(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🏓 Pong! Bot active hai.")
+# ❌ Error handler
+def error(update: Update, context: CallbackContext):
+    logging.error(f"Update {update} caused error {context.error}")
 
-# Main bot function
+# 🚀 Main function
 def main():
-    keep_alive()
+    updater = Updater(TOKEN, use_context=True)
+    dp = updater.dispatcher
 
-    app_bot = ApplicationBuilder().token(TOKEN).build()
+    # Commands
+    dp.add_handler(CommandHandler("start", start))
+    dp.add_handler(CommandHandler("help", help_command))
 
-    app_bot.add_handler(CommandHandler("start", start))
-    app_bot.add_handler(CommandHandler("ping", ping))
+    # Auto reply handler
+    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, auto_reply))
 
-    print("Bot started...")from telegram.ext import Updater, CommandHandler
+    # Error handler
+    dp.add_error_handler(error)
 
-import os
+    print("✅ Bot started successfully...")
+    
+    updater.start_polling()
+    updater.idle()
 
-TOKEN = os.getenv("BOT_TOKEN")
-
-def start(update, context):
-    update.message.reply_text("Bot chal raha hai ✅")
-
-updater = Updater(TOKEN, use_context=True)
-dp = updater.dispatcher
-
-dp.add_handler(CommandHandler("start", start))
-
-updater.start_polling()
-updater.idle()
-    app_bot.run_polling()
-
+# ▶️ Run
 if __name__ == "__main__":
     main()
