@@ -1,6 +1,5 @@
 import os
 import logging
-from flask import Flask
 from threading import Thread
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
@@ -10,12 +9,7 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
-
 TOKEN = os.getenv("BOT_TOKEN")
-
-# Flask app for keeping alive
-app = Flask('')
-
 @app.route('/')
 def home():
     return "Bot is alive!"
@@ -43,7 +37,22 @@ def main():
     app_bot.add_handler(CommandHandler("start", start))
     app_bot.add_handler(CommandHandler("ping", ping))
 
-    print("Bot started...")
+    print("Bot started...")from telegram.ext import Updater, CommandHandler
+
+import os
+
+TOKEN = os.getenv("BOT_TOKEN")
+
+def start(update, context):
+    update.message.reply_text("Bot chal raha hai ✅")
+
+updater = Updater(TOKEN, use_context=True)
+dp = updater.dispatcher
+
+dp.add_handler(CommandHandler("start", start))
+
+updater.start_polling()
+updater.idle()
     app_bot.run_polling()
 
 if __name__ == "__main__":
